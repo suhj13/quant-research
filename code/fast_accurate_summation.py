@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 # Utillize float16 as inputs
 def fl(x):
@@ -73,11 +74,11 @@ def FastPrecSum(p, K):
             tau_2 = (t - t_m) + tau[i]
             if i == (K-2):
                 res = t_m + (tau_2 + e)
-                return(res)
             else:
                 tau[i+1] = sigma_tilde[i+1] - sigma_0[i+1]
-                tau_3 = tau_2 + tau[i+1]
-                tau_4 = (tau_2 - tau_3) + tau[i+1]
+                tau_3, tau_4 = fasttwosum(tau_2, tau[i+1])
+                # tau_3 = tau_2 + tau[i+1]
+                # tau_4 = (tau_2 - tau_3) + tau[i+1]
                 if i == (K-3):
                     res = t_m + (tau_3 + (tau_4 + e))
                 else:
@@ -87,3 +88,14 @@ def FastPrecSum(p, K):
         t = t_m
     res = t_m + e
 
+p = []
+for i in range(6):
+    p.append(fl(i+0.42245425764))
+
+print(p)
+print(FastPrecSum(p, 4))
+
+sum = 0
+for j in p:
+    sum += np.float32(j)
+print(sum)
