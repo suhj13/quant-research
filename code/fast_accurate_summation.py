@@ -1,44 +1,54 @@
 import numpy as np
 
+# Utillize float16 as inputs
 def fl(x):
     y = np.float16(x)
     return y
 
-def fasttwosum(x,y):
-    
+# Fasttwosum algorithm given |a| >= |b|
+def fasttwosum(a, b):
+    a = fl(a)
+    b = fl(b)
+    s = a + b   # sum in float16
+    t = s - a   # lost portion of b due to rounding 
+    error = b - t   # error term (a + b -s)
+    return s, error
+
 
 def FastPrecSum(p, K):
-    # p is an np array of floats
+    # p is an np array of float16 values
     # K is an integer representing the no. of fixed extractions
+    # Operations between two float16 values will return a float16 result
     n = len(p)
     ExactFlag = False
 
-    eps = np.finfo(float).eps/2 # 2^-53
-    eta = 2**(-1074)
+    eps = np.finfo(np.float16).eps/2                    # The unit roundoff when using float16 values
+    eta = np.nextafter(np.float16(0), np.float16(1))    # Smallest possible number
 
-    T_values = [0]*K
-    T_values[0] = np.sum(np.abs(p))/(1-n*eps)
+    T_values = [fl(0)]*K
+    T_values[0] = fl(np.sum(np.abs(p))/(1 - n*eps))
     
-    sigma_0 = [0]*(K-1)
-    sigma_tilde = [0]*(K-1)
-    phi = [0]*(K-1)
+    sigma_0 = [fl(0)]*(K-1)
+    sigma_tilde = [fl(0)]*(K-1)
+    phi = [fl(0)]*(K-1)
 
     for i in range(K-1):
-        sigma_0[i] = (2*T_values[i])/(1-(3*n+1)*eps)
+        sigma_0[i] = (2*T_values[i])/(1 - (3*n + 1)*eps)
         sigma_tilde[i] = sigma_0[i]
 
-        q = (sigma_0[i]/(2*eps))
-        u = np.abs(q/(1-eps)-q)   # u = ufp(sigma_0)
+        q = (sigma_0[i] / (2*eps))
+        u = np.abs(q/(1 - eps) - q)   # u = ufp(sigma_0)
 
-        phi[i] = ((2*n*(n+2)*eps)*u)/(1-5*eps)
-        T_values[i+1] = min(((3/2 + 4*eps)*(n*eps)*sigma_0[i]),((2*n*eps)*u))
+        phi[i] = ((2*n*(n + 2)*eps)*u)/(1 - 5*eps)
+
+        T_values[i+1] = min(((3/2 + 4*eps)*(n*eps)*sigma_0[i]),((2*n*eps)*u))   # Need confirmation on the calculation of this value
 
         if (4*T_values[i+1] <= (eta/eps)):
             K = i +1
             ExactFlag = True
             break  
 
-    e = 0.0
+    e = fl(0)
     p_tilde = np.copy(p)    # Allows for change to p_tilde without affecting p, as opposed to setting p_tilde = p
 
     for i in range(n):
@@ -53,11 +63,11 @@ def FastPrecSum(p, K):
         res = e
         return(res)
     
-    t = 0.0
-    tau = [0]*(K-1)
+    t = fl(0)
+    tau = [fl(0)]*(K-1)
     for i in range(K-1):
         tau[i] = sigma_tilde[i] - sigma_0[i]
-        t_m = t + tau[i]
+        t_m = t + tau[i]     
 
         if abs(t_m) >= phi[i]:
             tau_2 = (t - t_m) + tau[i]
@@ -77,8 +87,3 @@ def FastPrecSum(p, K):
         t = t_m
     res = t_m + e
 
-n = 1000000
-p = np.random.random(n)
-K = 3
-
-print(FastPrecSum(p, K))
