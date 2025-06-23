@@ -26,6 +26,9 @@ def FastPrecSum(p, K):
     eps = np.finfo(np.float16).eps/2                    # The unit roundoff when using float16 values
     eta = np.nextafter(np.float16(0), np.float16(1))    # Smallest possible number
 
+    if K == 1:
+        return(np.sum(np.abs(p)))                       # Return the regular sum value 
+
     T_values = [fl(0)]*K
     T_values[0] = fl(np.sum(np.abs(p))/(1 - n*eps))
     
@@ -61,7 +64,7 @@ def FastPrecSum(p, K):
         e += p_tilde[i]
     
     if ExactFlag:
-        res = e
+        res = T_values[0] + e
         return(res)
     
     t = fl(0)
@@ -92,10 +95,13 @@ p = []
 for i in range(6):
     p.append(fl(i+0.42245425764))
 
-print(p)
-print(FastPrecSum(p, 4))
+sum0 = 0
+for i in p:
+    sum0 += i
+print("sum using regular loop:", sum0) 
+print("sum with FastPrecSum:", FastPrecSum(p, 1))
 
 sum = 0
 for j in p:
     sum += np.float32(j)
-print(sum)
+print("sum in float32:", sum)

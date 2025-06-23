@@ -15,8 +15,18 @@ array2 = [np.float16(0)]*5
 array1 = np.float16(array1)
 
 print(array1.dtype)
+print(array2[0].dtype)
 
 array3 = np.copy(array1)
 print(array3.dtype)
 
-print(abs(-5))
+print(np.float16(min(4,6)))
+
+sum = 0
+for i in range(6):
+    sum+= (i+0.422)
+print(sum)
+
+eps = np.finfo(np.float16).eps/2                    # The unit roundoff when using float16 values
+eta = np.nextafter(np.float16(0), np.float16(1))    # Smallest possible number
+print(eps, eta)
