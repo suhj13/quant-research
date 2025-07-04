@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from math import fsum
 
 # Utillize float16 as inputs
 def fl(x):
@@ -90,18 +91,21 @@ def FastPrecSum(p, K):
             return (res)
         t = t_m
     res = t_m + e
+    return(res)
 
-p = []
-for i in range(6):
-    p.append(fl(i+0.42245425764))
+print("Trivial cases")
+p = np.array([42.0], dtype = np.float16)
+print("p = [42.0]")
+print( FastPrecSum(p, 1))
 
-sum0 = 0
-for i in p:
-    sum0 += i
-print("sum using regular loop:", sum0) 
-print("sum with FastPrecSum:", FastPrecSum(p, 1))
+p = np.array([3.5, 3.5], dtype = np.float16)
+print("p = [3.5, 3.5]")
+print("K=1:", FastPrecSum(p, 1))
+print("K=2:", FastPrecSum(p, 2))
 
-sum = 0
-for j in p:
-    sum += np.float32(j)
-print("sum in float32:", sum)
+print("\nCancellation cases")
+p = np.array([1e4,1e-4] + [1e-3]*200, dtype = np.float16)
+ref = fsum(p.astype(np.float64))
+for K in range(1,5):
+    approx = FastPrecSum(p, K)
+    print("K =", K, float(approx), "err =", 100*abs(float(approx)-ref)/ref, "%")
