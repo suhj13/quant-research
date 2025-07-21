@@ -28,7 +28,7 @@ def FastPrecSum(p, K):
     eta = np.nextafter(np.float16(0), np.float16(1))    # Smallest possible number
 
     if K == 1:
-        return(np.sum(np.abs(p)))                       # Return the regular sum value 
+        return(np.sum(p, dtype = np.float16))                       # Return the regular sum value 
 
     T_values = [fl(0)]*K
     T_values[0] = fl(np.sum(np.abs(p))/(1 - n*eps))
@@ -93,19 +93,75 @@ def FastPrecSum(p, K):
     res = t_m + e
     return(res)
 
-print("Trivial cases")
-p = np.array([42.0], dtype = np.float16)
-print("p = [42.0]")
-print( FastPrecSum(p, 1))
+# Define 5 numbers as float16
+val = np.finfo(np.float16).tiny
+num1 = np.float16(1.0)
+num2 = np.float16((np.random.rand()*2-1)*val)   # Allows for values in the interval [-val, val]
+num3 = np.float16((np.random.rand()*2-1)*val)
+num4 = np.float16((np.random.rand()*2-1)*val)
+num5 = np.float16((np.random.rand()*2-1)*val)
 
-p = np.array([3.5, 3.5], dtype = np.float16)
-print("p = [3.5, 3.5]")
-print("K=1:", FastPrecSum(p, 1))
-print("K=2:", FastPrecSum(p, 2))
+nums = [num1, num2, num3, num4, num5]
+nums2= [num2, num3, num4, num5, num1]
 
-print("\nCancellation cases")
-p = np.array([1e4,1e-4] + [1e-3]*200, dtype = np.float16)
-ref = fsum(p.astype(np.float64))
-for K in range(1,5):
-    approx = FastPrecSum(p, K)
-    print("K =", K, float(approx), "err =", 100*abs(float(approx)-ref)/ref, "%")
+# Summation order 1: Small numbers first, then the large number
+sum_order1 = np.float16(0.0)
+for num in [num2, num3, num4, num5, num1]:
+    sum_order1 += num
+
+# Summation order 2: Large number first, then the small numbers
+sum_order2 = np.float16(0.0)
+for num in [num1, num2, num3, num4, num5]:
+    sum_order2 += num
+
+# Summation using higher precision (numpy float32) for comparison
+sum_high_precision = np.float32(num1) + np.float32(num2) + np.float32(num3) + np.float32(num4) + np.float32(num5)
+
+print(f"Numbers (float16): {nums}")
+print(f"Summation Order 1 (small numbers first): {sum_order1}")
+print(f"Summation Order 2 (large number first): {sum_order2}")
+print(f"Summation High Precision (float64): {sum_high_precision}")
+print(f"Difference (Order 1 - High Precision): {abs(sum_order1 - sum_high_precision)}")
+print(f"Difference (Order 2 - High Precision): {abs(sum_order2 - sum_high_precision)}")
+print(f"Difference (Order 1 - Order 2): {abs(sum_order1 - sum_order2)}")
+print("relative error (Order 1 - High Precision):", 100*abs(float(sum_order1) - sum_high_precision) / float(abs(sum_high_precision)), "%")
+print("\n")
+
+# FastPrecSum K = 2
+fastprecsum = FastPrecSum(nums, 2)
+
+print(f"Numbers (float16): {nums}")
+print(f"FastPrecSum K = 2 (Order 1): {fastprecsum}")
+print(f"High Precision (float32): {sum_high_precision}")
+print(f"Difference (Order 1 - High Precision): {abs(fastprecsum - sum_high_precision)}")
+print("relative error (Order 1 - High Precision):", 100*abs(float(fastprecsum) - sum_high_precision) / float(abs(sum_high_precision)), "%")
+print("\n")
+
+# FastPrecSum K = 3
+fastprecsum2 = FastPrecSum(nums, 3)
+
+print(f"Numbers (float16): {nums}")
+print(f"FastPrecSum K = 3 (Order 1): {fastprecsum2}")
+print(f"High Precision (float32): {sum_high_precision}")
+print(f"Difference (Order 1 - High Precision): {abs(fastprecsum2 - sum_high_precision)}")
+print("relative error (Order 1 - High Precision):", 100*abs(float(fastprecsum2) - sum_high_precision) / float(abs(sum_high_precision)), "%")
+print("\n")
+
+# FastPrecSum K = 4
+fastprecsum3 = FastPrecSum(nums, 4)
+
+print(f"Numbers (float16): {nums}")
+print(f"FastPrecSum K = 4 (Order 1): {fastprecsum3}")
+print(f"High Precision (float32): {sum_high_precision}")
+print(f"Difference (Order 1 - High Precision): {abs(fastprecsum3 - sum_high_precision)}")
+print("relative error (Order 1 - High Precision):", 100*abs(float(fastprecsum3) - sum_high_precision) / float(abs(sum_high_precision)), "%")
+print("\n")
+
+# FastPrecSum K = 5
+fastprecsum4 = FastPrecSum(nums, 5)
+
+print(f"Numbers (float16): {nums}")
+print(f"FastPrecSum K = 5 (Order 1): {fastprecsum4}")
+print(f"High Precision (float32): {sum_high_precision}")
+print(f"Difference (Order 1 - High Precision): {abs(fastprecsum4 - sum_high_precision)}")
+print("relative error (Order 1 - High Precision):", 100*abs(float(fastprecsum4) - sum_high_precision) / float(abs(sum_high_precision)), "%")
